@@ -1,0 +1,920 @@
+From 9f3d2b4eb62168e19962dd62c14fed48a576ee57 Mon Sep 17 00:00:00 2001
+From: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date: Thu, 11 Oct 2018 21:39:26 -0700
+Subject: [PATCH 1/6] x86: Support building without FFI_GO_CLOSURES
+
+Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+---
+ src/x86/ffi.c    | 6 ++++++
+ src/x86/ffi64.c  | 7 +++++++
+ src/x86/ffiw64.c | 5 +++++
+ 3 files changed, 18 insertions(+)
+
+diff --git a/src/x86/ffi.c b/src/x86/ffi.c
+index 346e784e..ecfa30c8 100644
+--- a/src/x86/ffi.c
++++ b/src/x86/ffi.c
+@@ -397,12 +397,14 @@ ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
+   ffi_call_int (cif, fn, rvalue, avalue, NULL);
+ }
+ 
++#ifdef FFI_GO_CLOSURES
+ void
+ ffi_call_go (ffi_cif *cif, void (*fn)(void), void *rvalue,
+ 	     void **avalue, void *closure)
+ {
+   ffi_call_int (cif, fn, rvalue, avalue, closure);
+ }
++#endif
+ 
+ /** private members **/
+ 
+@@ -575,6 +577,8 @@ ffi_prep_closure_loc (ffi_closure* closure,
+   return FFI_OK;
+ }
+ 
++#ifdef FFI_GO_CLOSURES
++
+ void FFI_HIDDEN ffi_go_closure_EAX(void);
+ void FFI_HIDDEN ffi_go_closure_ECX(void);
+ void FFI_HIDDEN ffi_go_closure_STDCALL(void);
+@@ -611,6 +615,8 @@ ffi_prep_go_closure (ffi_go_closure* closure, ffi_cif* cif,
+   return FFI_OK;
+ }
+ 
++#endif /* FFI_GO_CLOSURES */
++
+ /* ------- Native raw API support -------------------------------- */
+ 
+ #if !FFI_NO_RAW_API
+diff --git a/src/x86/ffi64.c b/src/x86/ffi64.c
+index ed82e235..39f95981 100644
+--- a/src/x86/ffi64.c
++++ b/src/x86/ffi64.c
+@@ -688,6 +688,8 @@ ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
+   ffi_call_int (cif, fn, rvalue, avalue, NULL);
+ }
+ 
++#ifdef FFI_GO_CLOSURES
++
+ #ifndef __ILP32__
+ extern void
+ ffi_call_go_efi64(ffi_cif *cif, void (*fn)(void), void *rvalue,
+@@ -708,6 +710,7 @@ ffi_call_go (ffi_cif *cif, void (*fn)(void), void *rvalue,
+   ffi_call_int (cif, fn, rvalue, avalue, closure);
+ }
+ 
++#endif /* FFI_GO_CLOSURES */
+ 
+ extern void ffi_closure_unix64(void) FFI_HIDDEN;
+ extern void ffi_closure_unix64_sse(void) FFI_HIDDEN;
+@@ -856,6 +859,8 @@ ffi_closure_unix64_inner(ffi_cif *cif,
+   return flags;
+ }
+ 
++#ifdef FFI_GO_CLOSURES
++
+ extern void ffi_go_closure_unix64(void) FFI_HIDDEN;
+ extern void ffi_go_closure_unix64_sse(void) FFI_HIDDEN;
+ 
+@@ -885,4 +890,6 @@ ffi_prep_go_closure (ffi_go_closure* closure, ffi_cif* cif,
+   return FFI_OK;
+ }
+ 
++#endif /* FFI_GO_CLOSURES */
++
+ #endif /* __x86_64__ */
+diff --git a/src/x86/ffiw64.c b/src/x86/ffiw64.c
+index 034dffda..a43a9ebe 100644
+--- a/src/x86/ffiw64.c
++++ b/src/x86/ffiw64.c
+@@ -187,7 +187,10 @@ EFI64(ffi_call_go)(ffi_cif *cif, void (*fn)(void), void *rvalue,
+ 
+ 
+ extern void ffi_closure_win64(void) FFI_HIDDEN;
++
++#ifdef FFI_GO_CLOSURES
+ extern void ffi_go_closure_win64(void) FFI_HIDDEN;
++#endif
+ 
+ ffi_status
+ EFI64(ffi_prep_closure_loc)(ffi_closure* closure,
+@@ -227,6 +230,7 @@ EFI64(ffi_prep_closure_loc)(ffi_closure* closure,
+   return FFI_OK;
+ }
+ 
++#ifdef FFI_GO_CLOSURES
+ ffi_status
+ EFI64(ffi_prep_go_closure)(ffi_go_closure* closure, ffi_cif* cif,
+ 		     void (*fun)(ffi_cif*, void*, void**, void*))
+@@ -246,6 +250,7 @@ EFI64(ffi_prep_go_closure)(ffi_go_closure* closure, ffi_cif* cif,
+ 
+   return FFI_OK;
+ }
++#endif
+ 
+ struct win64_closure_frame
+ {
+
+From 9c939534a278b3d5cb73104e69458bd3c24cb4bd Mon Sep 17 00:00:00 2001
+From: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date: Thu, 11 Oct 2018 21:52:34 -0700
+Subject: [PATCH 2/6] arm: Support building without FFI_GO_CLOSURES
+
+Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+---
+ src/arm/ffi.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/src/arm/ffi.c b/src/arm/ffi.c
+index efea031f..00583900 100644
+--- a/src/arm/ffi.c
++++ b/src/arm/ffi.c
+@@ -426,12 +426,14 @@ ffi_call (ffi_cif *cif, void (*fn) (void), void *rvalue, void **avalue)
+   ffi_call_int (cif, fn, rvalue, avalue, NULL);
+ }
+ 
++#ifdef FFI_GO_CLOSURES
+ void
+ ffi_call_go (ffi_cif *cif, void (*fn) (void), void *rvalue,
+ 	     void **avalue, void *closure)
+ {
+   ffi_call_int (cif, fn, rvalue, avalue, closure);
+ }
++#endif
+ 
+ static void *
+ ffi_prep_incoming_args_SYSV (ffi_cif *cif, void *rvalue,
+@@ -569,8 +571,11 @@ ffi_closure_inner_VFP (ffi_cif *cif,
+ 
+ void ffi_closure_SYSV (void) FFI_HIDDEN;
+ void ffi_closure_VFP (void) FFI_HIDDEN;
++
++#ifdef FFI_GO_CLOSURES
+ void ffi_go_closure_SYSV (void) FFI_HIDDEN;
+ void ffi_go_closure_VFP (void) FFI_HIDDEN;
++#endif
+ 
+ /* the cif must already be prep'ed */
+ 
+@@ -637,6 +642,7 @@ ffi_prep_closure_loc (ffi_closure * closure,
+   return FFI_OK;
+ }
+ 
++#ifdef FFI_GO_CLOSURES
+ ffi_status
+ ffi_prep_go_closure (ffi_go_closure *closure, ffi_cif *cif,
+ 		     void (*fun) (ffi_cif *, void *, void **, void *))
+@@ -658,6 +664,7 @@ ffi_prep_go_closure (ffi_go_closure *closure, ffi_cif *cif,
+ 
+   return FFI_OK;
+ }
++#endif
+ 
+ /* Below are routines for VFP hard-float support. */
+ 
+
+From 0fa448827b2aabffbf2fdab0418e5e571db27c89 Mon Sep 17 00:00:00 2001
+From: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date: Sat, 11 Apr 2020 16:17:14 -0700
+Subject: [PATCH 3/6] testsuite: Add a missing include of <inttypes.h> to fix
+ build failure in test suite
+
+Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+---
+ testsuite/libffi.closures/huge_struct.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/testsuite/libffi.closures/huge_struct.c b/testsuite/libffi.closures/huge_struct.c
+index 1915c3f1..e8e1d860 100644
+--- a/testsuite/libffi.closures/huge_struct.c
++++ b/testsuite/libffi.closures/huge_struct.c
+@@ -9,6 +9,8 @@
+ /* { dg-options -mlong-double-128 { target powerpc64*-*-linux* } } */
+ /* { dg-options -Wformat=0 { target moxie*-*-elf or1k-*-* } } */
+ 
++#include <inttypes.h>
++
+ #include "ffitest.h"
+ 
+ typedef	struct BigStruct{
+
+From a1928d7809c7a8decd85255290f287072b907509 Mon Sep 17 00:00:00 2001
+From: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date: Fri, 29 May 2020 11:22:25 -0700
+Subject: [PATCH 4/6] arm64e: use a dedicated dylib for trampolines, so it can
+ be remapped
+
+It is no longer allowed to simply vm_remap code pages willy-nilly.  Only entire
+signed executable segment of a dylib may be remapped.  Accordingly, we need a
+helper dylib (called libffi-trampolines.dylib) to support our use of vm_remap
+for trampolines.
+
+NOTES: This changes the ptrauth support from #548 to match what Apple is
+       shipping in its libffi-27 tag.
+
+TODO: Split arm64e ptrauth parts out from trampoline parts
+      Add autoconf-based build logic for the whole dylib trampoline support
+
+Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+---
+ include/ffi.h.in         |  5 +++
+ src/aarch64/ffi.c        | 35 +++++++++++++---
+ src/aarch64/internal.h   | 21 ++++++++++
+ src/aarch64/sysv.S       | 88 ++++++++++++++++++++++------------------
+ src/aarch64/trampoline.S | 44 ++++++++++++++++++++
+ src/arm/ffi.c            |  4 ++
+ src/arm/sysv.S           |  3 ++
+ src/closures.c           | 77 +++++++++++++++++++++++++++--------
+ src/prep_cif.c           |  2 +-
+ src/x86/ffi64.c          |  6 +++
+ 10 files changed, 222 insertions(+), 63 deletions(-)
+ create mode 100644 src/aarch64/trampoline.S
+
+diff --git a/include/ffi.h.in b/include/ffi.h.in
+index 38885b0a..54380088 100644
+--- a/include/ffi.h.in
++++ b/include/ffi.h.in
+@@ -357,6 +357,11 @@ ffi_prep_closure_loc (ffi_closure*,
+ 		      void *user_data,
+ 		      void*codeloc);
+ 
++#if defined(__x86_64__) || defined(__arm64__)
++FFI_API ffi_closure *
++ffi_find_closure_for_code(void *code);
++#endif
++
+ #ifdef __sgi
+ # pragma pack 8
+ #endif
+diff --git a/src/aarch64/ffi.c b/src/aarch64/ffi.c
+index 508a6240..c4e6413c 100644
+--- a/src/aarch64/ffi.c
++++ b/src/aarch64/ffi.c
+@@ -602,11 +602,12 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *orig_rvalue,
+   else if (flags & AARCH64_RET_NEED_COPY)
+     rsize = 16;
+ 
+-  /* Allocate consectutive stack for everything we'll need.  */
+-  context = alloca (sizeof(struct call_context) + stack_bytes + 32 + rsize);
++  /* Allocate consectutive stack for everything we'll need.
++     The frame uses 40 bytes for: lr, fp, rvalue, flags, sp */
++  context = alloca (sizeof(struct call_context) + stack_bytes + 40 + rsize);
+   stack = context + 1;
+   frame = (void*)((uintptr_t)stack + (uintptr_t)stack_bytes);
+-  rvalue = (rsize ? (void*)((uintptr_t)frame + 32) : orig_rvalue);
++  rvalue = (rsize ? (void*)((uintptr_t)frame + 40) : orig_rvalue);
+ 
+   arg_init (&state);
+   for (i = 0, nargs = cif->nargs; i < nargs; i++)
+@@ -768,6 +769,8 @@ ffi_call_go (ffi_cif *cif, void (*fn) (void), void *rvalue,
+ }
+ #endif /* FFI_GO_CLOSURES */
+ 
++#if FFI_CLOSURES
++
+ /* Build a trampoline.  */
+ 
+ extern void ffi_closure_SYSV (void) FFI_HIDDEN;
+@@ -792,10 +795,14 @@ ffi_prep_closure_loc (ffi_closure *closure,
+ 
+ #if FFI_EXEC_TRAMPOLINE_TABLE
+ #ifdef __MACH__
+-#ifdef HAVE_PTRAUTH
+-  codeloc = ptrauth_strip (codeloc, ptrauth_key_asia);
++#if HAVE_PTRAUTH
++  codeloc = ptrauth_auth_data(codeloc, ptrauth_key_function_pointer, 0);
+ #endif
++#ifdef FFI_TRAMPOLINE_WHOLE_DYLIB
++  void **config = (void **)((uint8_t *)codeloc - 2*PAGE_MAX_SIZE);
++#else
+   void **config = (void **)((uint8_t *)codeloc - PAGE_MAX_SIZE);
++#endif
+   config[0] = closure;
+   config[1] = start;
+ #endif
+@@ -831,6 +838,22 @@ ffi_prep_closure_loc (ffi_closure *closure,
+   return FFI_OK;
+ }
+ 
++ffi_closure *
++ffi_find_closure_for_code(void *codeloc)
++{
++#if FFI_EXEC_TRAMPOLINE_TABLE
++#  ifdef FFI_TRAMPOLINE_WHOLE_DYLIB
++    void **config = (void **)((uint8_t *)codeloc - 2*PAGE_MAX_SIZE);
++#  else
++    void **config = (void **)((uint8_t *)codeloc - PAGE_MAX_SIZE);
++#  endif
++    return config[0];
++#else
++    return (ffi_closure*)codeloc;
++#endif
++}
++
++
+ #ifdef FFI_GO_CLOSURES
+ extern void ffi_go_closure_SYSV (void) FFI_HIDDEN;
+ extern void ffi_go_closure_SYSV_V (void) FFI_HIDDEN;
+@@ -1012,4 +1035,6 @@ ffi_closure_SYSV_inner (ffi_cif *cif,
+   return flags;
+ }
+ 
++#endif /* FFI_CLOSURES */
++
+ #endif /* (__aarch64__) || defined(__arm64__)|| defined (_M_ARM64)*/
+diff --git a/src/aarch64/internal.h b/src/aarch64/internal.h
+index 9c3e0772..52ac2479 100644
+--- a/src/aarch64/internal.h
++++ b/src/aarch64/internal.h
+@@ -65,3 +65,24 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
+ #define N_X_ARG_REG		8
+ #define N_V_ARG_REG		8
+ #define CALL_CONTEXT_SIZE	(N_V_ARG_REG * 16 + N_X_ARG_REG * 8)
++
++/* Helpers for writing assembly compatible with arm ptr auth */
++#ifdef LIBFFI_ASM
++
++#ifdef HAVE_PTRAUTH
++#define SIGN_LR pacibsp
++#define SIGN_LR_WITH_REG(x) pacib lr, x
++#define AUTH_LR_AND_RET retab
++#define AUTH_LR_WITH_REG(x) autib lr, x
++#define BRANCH_AND_LINK_TO_REG blraaz
++#define BRANCH_TO_REG braaz
++#else
++#define SIGN_LR
++#define SIGN_LR_WITH_REG(x)
++#define AUTH_LR_AND_RET ret
++#define AUTH_LR_WITH_REG(x)
++#define BRANCH_AND_LINK_TO_REG blr
++#define BRANCH_TO_REG br
++#endif
++
++#endif
+diff --git a/src/aarch64/sysv.S b/src/aarch64/sysv.S
+index b720a92e..cc5da39a 100644
+--- a/src/aarch64/sysv.S
++++ b/src/aarch64/sysv.S
+@@ -56,14 +56,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
+ #define PTR_SIZE	4
+ #else
+ #define PTR_SIZE	8
+-#endif
+-
+-#if FFI_EXEC_TRAMPOLINE_TABLE && defined(__MACH__) && defined(HAVE_PTRAUTH)
+-# define BR(r)  braaz r
+-# define BLR(r) blraaz r
+-#else
+-# define BR(r)  br r
+-# define BLR(r) blr r
+ #endif
+ 
+ 	.text
+@@ -86,9 +78,14 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
+ 
+ 	cfi_startproc
+ CNAME(ffi_call_SYSV):
++	/* Sign the lr with x1 since that is where it will be stored */
++	SIGN_LR_WITH_REG(x1)
++
+ 	/* Use a stack frame allocated by our caller.  */
+-	cfi_def_cfa(x1, 32);
++	cfi_def_cfa(x1, 40);
+ 	stp	x29, x30, [x1]
++	mov	x9, sp
++	str	x9, [x1, #32]
+ 	mov	x29, x1
+ 	mov	sp, x0
+ 	cfi_def_cfa_register(x29)
+@@ -119,13 +116,15 @@ CNAME(ffi_call_SYSV):
+ 	/* Deallocate the context, leaving the stacked arguments.  */
+ 	add	sp, sp, #CALL_CONTEXT_SIZE
+ 
+-	BLR(x9)				/* call fn */
++	BRANCH_AND_LINK_TO_REG     x9			/* call fn */
+ 
+ 	ldp	x3, x4, [x29, #16]	/* reload rvalue and flags */
+ 
+ 	/* Partially deconstruct the stack frame.  */
+-	mov     sp, x29
++	ldr	x9, [x29, #32]
++	mov	sp, x9
+ 	cfi_def_cfa_register (sp)
++	mov	x2, x29			/* Preserve for auth */
+ 	ldp     x29, x30, [x29]
+ 
+ 	/* Save the return value as directed.  */
+@@ -139,71 +138,76 @@ CNAME(ffi_call_SYSV):
+ 	   and therefore we want to extend to 64 bits; these types
+ 	   have two consecutive entries allocated for them.  */
+ 	.align	4
+-0:	ret				/* VOID */
++0:	b 99f				/* VOID */
+ 	nop
+ 1:	str	x0, [x3]		/* INT64 */
+-	ret
++	b 99f
+ 2:	stp	x0, x1, [x3]		/* INT128 */
+-	ret
++	b 99f
+ 3:	brk	#1000			/* UNUSED */
+-	ret
++	b 99f
+ 4:	brk	#1000			/* UNUSED */
+-	ret
++	b 99f
+ 5:	brk	#1000			/* UNUSED */
+-	ret
++	b 99f
+ 6:	brk	#1000			/* UNUSED */
+-	ret
++	b 99f
+ 7:	brk	#1000			/* UNUSED */
+-	ret
++	b 99f
+ 8:	st4	{ v0.s, v1.s, v2.s, v3.s }[0], [x3]	/* S4 */
+-	ret
++	b 99f
+ 9:	st3	{ v0.s, v1.s, v2.s }[0], [x3]	/* S3 */
+-	ret
++	b 99f
+ 10:	stp	s0, s1, [x3]		/* S2 */
+-	ret
++	b 99f
+ 11:	str	s0, [x3]		/* S1 */
+-	ret
++	b 99f
+ 12:	st4	{ v0.d, v1.d, v2.d, v3.d }[0], [x3]	/* D4 */
+-	ret
++	b 99f
+ 13:	st3	{ v0.d, v1.d, v2.d }[0], [x3]	/* D3 */
+-	ret
++	b 99f
+ 14:	stp	d0, d1, [x3]		/* D2 */
+-	ret
++	b 99f
+ 15:	str	d0, [x3]		/* D1 */
+-	ret
++	b 99f
+ 16:	str	q3, [x3, #48]		/* Q4 */
+ 	nop
+ 17:	str	q2, [x3, #32]		/* Q3 */
+ 	nop
+ 18:	stp	q0, q1, [x3]		/* Q2 */
+-	ret
++	b 99f
+ 19:	str	q0, [x3]		/* Q1 */
+-	ret
++	b 99f
+ 20:	uxtb	w0, w0			/* UINT8 */
+ 	str	x0, [x3]
+-21:	ret				/* reserved */
++21:	b 99f				/* reserved */
+ 	nop
+ 22:	uxth	w0, w0			/* UINT16 */
+ 	str	x0, [x3]
+-23:	ret				/* reserved */
++23:	b 99f				/* reserved */
+ 	nop
+ 24:	mov	w0, w0			/* UINT32 */
+ 	str	x0, [x3]
+-25:	ret				/* reserved */
++25:	b 99f				/* reserved */
+ 	nop
+ 26:	sxtb	x0, w0			/* SINT8 */
+ 	str	x0, [x3]
+-27:	ret				/* reserved */
++27:	b 99f				/* reserved */
+ 	nop
+ 28:	sxth	x0, w0			/* SINT16 */
+ 	str	x0, [x3]
+-29:	ret				/* reserved */
++29:	b 99f				/* reserved */
+ 	nop
+ 30:	sxtw	x0, w0			/* SINT32 */
+ 	str	x0, [x3]
+-31:	ret				/* reserved */
++31:	b 99f				/* reserved */
+ 	nop
+ 
++	/* Return now that result has been populated. */
++99:
++	AUTH_LR_WITH_REG(x2)
++	ret
++
+ 	cfi_endproc
+ 
+ 	.globl	CNAME(ffi_call_SYSV)
+@@ -213,6 +217,8 @@ CNAME(ffi_call_SYSV):
+ 	.size CNAME(ffi_call_SYSV), .-CNAME(ffi_call_SYSV)
+ #endif
+ 
++#if FFI_CLOSURES
++
+ /* ffi_closure_SYSV
+ 
+    Closure invocation glue. This is the low level code invoked directly by
+@@ -232,6 +238,7 @@ CNAME(ffi_call_SYSV):
+ 	.align 4
+ CNAME(ffi_closure_SYSV_V):
+ 	cfi_startproc
++	SIGN_LR
+ 	stp     x29, x30, [sp, #-ffi_closure_SYSV_FS]!
+ 	cfi_adjust_cfa_offset (ffi_closure_SYSV_FS)
+ 	cfi_rel_offset (x29, 0)
+@@ -255,6 +262,7 @@ CNAME(ffi_closure_SYSV_V):
+ 	.align	4
+ 	cfi_startproc
+ CNAME(ffi_closure_SYSV):
++	SIGN_LR
+ 	stp     x29, x30, [sp, #-ffi_closure_SYSV_FS]!
+ 	cfi_adjust_cfa_offset (ffi_closure_SYSV_FS)
+ 	cfi_rel_offset (x29, 0)
+@@ -271,7 +279,9 @@ CNAME(ffi_closure_SYSV):
+ 	/* Load ffi_closure_inner arguments.  */
+ 	ldp	PTR_REG(0), PTR_REG(1), [x17, #FFI_TRAMPOLINE_CLOSURE_OFFSET]	/* load cif, fn */
+ 	ldr	PTR_REG(2), [x17, #FFI_TRAMPOLINE_CLOSURE_OFFSET+PTR_SIZE*2]	/* load user_data */
++#ifdef FFI_GO_CLOSURES
+ .Ldo_closure:
++#endif
+ 	add	x3, sp, #16				/* load context */
+ 	add	x4, sp, #ffi_closure_SYSV_FS		/* load stack */
+ 	add	x5, sp, #16+CALL_CONTEXT_SIZE		/* load rvalue */
+@@ -279,9 +289,6 @@ CNAME(ffi_closure_SYSV):
+ 	bl      CNAME(ffi_closure_SYSV_inner)
+ 
+ 	/* Load the return value as directed.  */
+-#if FFI_EXEC_TRAMPOLINE_TABLE && defined(__MACH__) && defined(HAVE_PTRAUTH)
+-	autiza	x1
+-#endif
+ 	adr	x1, 0f
+ 	and	w0, w0, #AARCH64_RET_MASK
+ 	add	x1, x1, x0, lsl #3
+@@ -357,7 +364,7 @@ CNAME(ffi_closure_SYSV):
+ 	cfi_adjust_cfa_offset (-ffi_closure_SYSV_FS)
+ 	cfi_restore (x29)
+ 	cfi_restore (x30)
+-	ret
++	AUTH_LR_AND_RET
+ 	cfi_endproc
+ 
+ 	.globl	CNAME(ffi_closure_SYSV)
+@@ -376,7 +383,7 @@ CNAME(ffi_closure_trampoline_table_page):
+     .rept PAGE_MAX_SIZE / FFI_TRAMPOLINE_SIZE
+     adr x16, -PAGE_MAX_SIZE
+     ldp x17, x16, [x16]
+-    BR(x16)
++    br x16
+ 	nop		/* each entry in the trampoline config page is 2*sizeof(void*) so the trampoline itself cannot be smaller than 16 bytes */
+     .endr
+ 
+@@ -443,6 +450,7 @@ CNAME(ffi_go_closure_SYSV):
+ 	.size	CNAME(ffi_go_closure_SYSV), . - CNAME(ffi_go_closure_SYSV)
+ #endif
+ #endif /* FFI_GO_CLOSURES */
++#endif /* FFI_CLOSURES */
+ #endif /* __arm64__ */
+ 
+ #if defined __ELF__ && defined __linux__
+diff --git a/src/aarch64/trampoline.S b/src/aarch64/trampoline.S
+new file mode 100644
+index 00000000..24597d75
+--- /dev/null
++++ b/src/aarch64/trampoline.S
+@@ -0,0 +1,44 @@
++#ifdef __arm64__
++
++#define LIBFFI_ASM
++#include <fficonfig.h>
++#include <ffi.h>
++#include <ffi_cfi.h>
++#include "internal.h"
++
++#ifdef FFI_EXEC_TRAMPOLINE_TABLE
++
++#ifdef __MACH__
++#include <mach/machine/vm_param.h>
++#endif
++
++#ifdef HAVE_MACHINE_ASM_H
++# include <machine/asm.h>
++#else
++# ifdef __USER_LABEL_PREFIX__
++#  define CONCAT1(a, b) CONCAT2(a, b)
++#  define CONCAT2(a, b) a ## b
++#  define CNAME(x) CONCAT1 (__USER_LABEL_PREFIX__, x)
++# else
++#  define CNAME(x) x
++# endif
++#endif
++
++.set page_max_size, PAGE_MAX_SIZE
++.align PAGE_MAX_SHIFT
++.text
++.globl CNAME(ffi_closure_trampoline_table_page)
++CNAME(ffi_closure_trampoline_table_page):
++    .rept PAGE_MAX_SIZE / FFI_TRAMPOLINE_SIZE
++#ifdef FFI_TRAMPOLINE_WHOLE_DYLIB
++    adr x16, -(2 * PAGE_MAX_SIZE)
++#else
++    adr x16, -PAGE_MAX_SIZE
++#endif
++    ldp x17, x16, [x16]
++    BRANCH_TO_REG x16
++	nop		/* each entry in the trampoline config page is 2*sizeof(void*) so the trampoline itself cannot be smaller that 16 bytes */
++    .endr
++
++#endif /* FFI_EXEC_TRAMPOLINE_TABLE */
++#endif /* __arm64 */
+diff --git a/src/arm/ffi.c b/src/arm/ffi.c
+index 00583900..d3802715 100644
+--- a/src/arm/ffi.c
++++ b/src/arm/ffi.c
+@@ -536,6 +536,8 @@ ffi_prep_incoming_args_VFP (ffi_cif *cif, void *rvalue, char *stack,
+   return rvalue;
+ }
+ 
++#if FFI_CLOSURES
++
+ struct closure_frame
+ {
+   char vfp_space[8*8] __attribute__((aligned(8)));
+@@ -666,6 +668,8 @@ ffi_prep_go_closure (ffi_go_closure *closure, ffi_cif *cif,
+ }
+ #endif
+ 
++#endif /* FFI_CLOSURES */
++
+ /* Below are routines for VFP hard-float support. */
+ 
+ /* A subroutine of vfp_type_p.  Given a structure type, return the type code
+diff --git a/src/arm/sysv.S b/src/arm/sysv.S
+index 74bc53fa..112cf79d 100644
+--- a/src/arm/sysv.S
++++ b/src/arm/sysv.S
+@@ -208,6 +208,7 @@ E(ARM_TYPE_STRUCT)
+ 	UNWIND(.fnend)
+ ARM_FUNC_END(ffi_call_SYSV)
+ 
++#if FFI_CLOSURES
+ 
+ /*
+ 	int ffi_closure_inner_* (cif, fun, user_data, frame)
+@@ -354,6 +355,8 @@ E(ARM_TYPE_STRUCT)
+ 	cfi_endproc
+ ARM_FUNC_END(ffi_closure_ret)
+ 
++#endif /* FFI_CLOSURES */
++
+ #if FFI_EXEC_TRAMPOLINE_TABLE
+ 
+ #ifdef __MACH__
+diff --git a/src/closures.c b/src/closures.c
+index 4fe6158d..7d1eff03 100644
+--- a/src/closures.c
++++ b/src/closures.c
+@@ -146,6 +146,9 @@ ffi_closure_free (void *ptr)
+ 
+ #ifdef __MACH__
+ 
++#include <assert.h>
++#include <dispatch/dispatch.h>
++#include <dlfcn.h>
+ #include <mach/mach.h>
+ #include <pthread.h>
+ #ifdef HAVE_PTRAUTH
+@@ -154,8 +157,6 @@ ffi_closure_free (void *ptr)
+ #include <stdio.h>
+ #include <stdlib.h>
+ 
+-extern void *ffi_closure_trampoline_table_page;
+-
+ typedef struct ffi_trampoline_table ffi_trampoline_table;
+ typedef struct ffi_trampoline_table_entry ffi_trampoline_table_entry;
+ 
+@@ -163,7 +164,6 @@ struct ffi_trampoline_table
+ {
+   /* contiguous writable and executable pages */
+   vm_address_t config_page;
+-  vm_address_t trampoline_page;
+ 
+   /* free list tracking */
+   uint16_t free_count;
+@@ -183,6 +183,22 @@ struct ffi_trampoline_table_entry
+ /* Total number of trampolines that fit in one trampoline table */
+ #define FFI_TRAMPOLINE_COUNT (PAGE_MAX_SIZE / FFI_TRAMPOLINE_SIZE)
+ 
++/* The trampoline dylib has one page for the MACHO_HEADER and one page for the trampolines.
++ * iOS 12.0 and later require that the entire dylib needs to be remapped as a unit.
++ *
++ * arm (legacy): Allocate two pages -- a config page and a placeholder for the trampolines
++ * arm64 (modern): Allocate three pages -- a config page and two placeholders for the trampoline dylib
++ *
++ * TODO: Update arm to be consistent with arm64.  Note that iOS12 does not support armv7.
++ */
++#ifdef FFI_TRAMPOLINE_WHOLE_DYLIB
++#define FFI_TRAMPOLINE_ALLOCATION_PAGE_COUNT 3
++#define FFI_TRAMPOLINE_PAGE_SEGMENT_OFFSET PAGE_MAX_SIZE
++#else
++#define FFI_TRAMPOLINE_ALLOCATION_PAGE_COUNT 2
++#define FFI_TRAMPOLINE_PAGE_SEGMENT_OFFSET 0
++#endif
++
+ static pthread_mutex_t ffi_trampoline_lock = PTHREAD_MUTEX_INITIALIZER;
+ static ffi_trampoline_table *ffi_trampoline_tables = NULL;
+ 
+@@ -198,34 +214,61 @@ ffi_trampoline_table_alloc (void)
+   kern_return_t kt;
+   uint16_t i;
+ 
+-  /* Allocate two pages -- a config page and a placeholder page */
+   config_page = 0x0;
+-  kt = vm_allocate (mach_task_self (), &config_page, PAGE_MAX_SIZE * 2,
++  /* The entire allocation is:
++   *    config_page
++   *    trampoline_segment
++   *
++   * trampoline_segment is:
++   *    trampoline dylib mach-o header (if FFI_TRAMPOLINE_WHOLE_DYLIB)
++   *    trampoline page
++   */
++  kt = vm_allocate (mach_task_self (), &config_page, FFI_TRAMPOLINE_ALLOCATION_PAGE_COUNT * PAGE_MAX_SIZE,
+ 		    VM_FLAGS_ANYWHERE);
+   if (kt != KERN_SUCCESS)
+     return NULL;
+ 
+-  /* Remap the trampoline table on top of the placeholder page */
+-  trampoline_page = config_page + PAGE_MAX_SIZE;
+-  trampoline_page_template = (vm_address_t)&ffi_closure_trampoline_table_page;
++  static dispatch_once_t trampoline_template_init_once;
++  static void *ffi_closure_trampoline_table_page;
++
++  dispatch_once(&trampoline_template_init_once, ^{
++    void * const trampoline_handle = dlopen("/usr/lib/libffi-trampolines.dylib", RTLD_NOW | RTLD_LOCAL | RTLD_FIRST);
++    assert(trampoline_handle);
++
++    ffi_closure_trampoline_table_page = dlsym(trampoline_handle, "ffi_closure_trampoline_table_page");
++    assert(ffi_closure_trampoline_table_page);
++  });
++
++#ifdef HAVE_PTRAUTH
++  trampoline_page_template = (uintptr_t)ptrauth_auth_data((void *)ffi_closure_trampoline_table_page, ptrauth_key_function_pointer, 0);
++#else
++  trampoline_page_template = (uintptr_t)ffi_closure_trampoline_table_page;
++#endif
+ #ifdef __arm__
+   /* ffi_closure_trampoline_table_page can be thumb-biased on some ARM archs */
+   trampoline_page_template &= ~1UL;
+ #endif
+-  kt = vm_remap (mach_task_self (), &trampoline_page, PAGE_MAX_SIZE, 0x0,
+-		 VM_FLAGS_OVERWRITE, mach_task_self (), trampoline_page_template,
++
++  vm_address_t trampoline_segment_template = trampoline_page_template - FFI_TRAMPOLINE_PAGE_SEGMENT_OFFSET;
++  vm_size_t trampoline_segment_size = (FFI_TRAMPOLINE_ALLOCATION_PAGE_COUNT - 1) * PAGE_MAX_SIZE;
++
++  /* Remap the trampoline table on top of the placeholder page */
++  vm_address_t trampoline_segment = config_page + PAGE_MAX_SIZE;
++  kt = vm_remap (mach_task_self(), &trampoline_segment, trampoline_segment_size, 0x0,
++		 VM_FLAGS_FIXED | VM_FLAGS_OVERWRITE, mach_task_self(), trampoline_segment_template,
+ 		 FALSE, &cur_prot, &max_prot, VM_INHERIT_SHARE);
+-  if (kt != KERN_SUCCESS)
++  if (kt != KERN_SUCCESS || !(cur_prot & VM_PROT_EXECUTE))
+     {
+-      vm_deallocate (mach_task_self (), config_page, PAGE_MAX_SIZE * 2);
++      vm_deallocate (mach_task_self (), config_page, FFI_TRAMPOLINE_ALLOCATION_PAGE_COUNT * PAGE_MAX_SIZE);
+       return NULL;
+     }
+ 
++  trampoline_page = trampoline_segment + FFI_TRAMPOLINE_PAGE_SEGMENT_OFFSET;
++
+   /* We have valid trampoline and config pages */
+   table = calloc (1, sizeof (ffi_trampoline_table));
+   table->free_count = FFI_TRAMPOLINE_COUNT;
+   table->config_page = config_page;
+-  table->trampoline_page = trampoline_page;
+ 
+   /* Create and initialize the free list */
+   table->free_list_pool =
+@@ -235,7 +278,10 @@ ffi_trampoline_table_alloc (void)
+     {
+       ffi_trampoline_table_entry *entry = &table->free_list_pool[i];
+       entry->trampoline =
+-	(void *) (table->trampoline_page + (i * FFI_TRAMPOLINE_SIZE));
++	(void *) (trampoline_page + (i * FFI_TRAMPOLINE_SIZE));
++#ifdef HAVE_PTRAUTH
++      entry->trampoline = ptrauth_sign_unauthenticated(entry->trampoline, ptrauth_key_function_pointer, 0);
++#endif
+ 
+       if (i < table->free_count - 1)
+ 	entry->next = &table->free_list_pool[i + 1];
+@@ -304,9 +350,6 @@ ffi_closure_alloc (size_t size, void **code)
+ 
+   /* Initialize the return values */
+   *code = entry->trampoline;
+-#ifdef HAVE_PTRAUTH
+-  *code = ptrauth_sign_unauthenticated (*code, ptrauth_key_asia, 0);
+-#endif
+   closure->trampoline_table = table;
+   closure->trampoline_table_entry = entry;
+ 
+diff --git a/src/prep_cif.c b/src/prep_cif.c
+index 1db3804b..fd2ea3e8 100644
+--- a/src/prep_cif.c
++++ b/src/prep_cif.c
+@@ -234,7 +234,7 @@ ffi_status ffi_prep_cif_var(ffi_cif *cif,
+   return ffi_prep_cif_core(cif, abi, 1, nfixedargs, ntotalargs, rtype, atypes);
+ }
+ 
+-#if FFI_CLOSURES
++#if FFI_CLOSURES && FFI_LEGACY_CLOSURE_API
+ 
+ ffi_status
+ ffi_prep_closure (ffi_closure* closure,
+diff --git a/src/x86/ffi64.c b/src/x86/ffi64.c
+index 39f95981..1df4182d 100644
+--- a/src/x86/ffi64.c
++++ b/src/x86/ffi64.c
+@@ -766,6 +766,12 @@ ffi_prep_closure_loc (ffi_closure* closure,
+   return FFI_OK;
+ }
+ 
++ffi_closure *
++ffi_find_closure_for_code(void *code)
++{
++    return (ffi_closure *) code;
++}
++
+ int FFI_HIDDEN
+ ffi_closure_unix64_inner(ffi_cif *cif,
+ 			 void (*fun)(ffi_cif*, void*, void**, void*),
+
+From 5c91f6048da553ed92984310246a9f804d8bb210 Mon Sep 17 00:00:00 2001
+From: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date: Wed, 18 Sep 2019 13:28:26 -0700
+Subject: [PATCH 5/6] arm64e: libunwind requires that the CFA match the value
+ used to sign LR
+
+Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+---
+ src/aarch64/sysv.S | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/src/aarch64/sysv.S b/src/aarch64/sysv.S
+index cc5da39a..97f67331 100644
+--- a/src/aarch64/sysv.S
++++ b/src/aarch64/sysv.S
+@@ -82,7 +82,15 @@ CNAME(ffi_call_SYSV):
+ 	SIGN_LR_WITH_REG(x1)
+ 
+ 	/* Use a stack frame allocated by our caller.  */
++#ifdef HAVE_PTRAUTH && defined(__APPLE__)
++	/* darwin's libunwind assumes that the cfa is the sp and that's the data
++	 * used to sign the lr.  In order to allow unwinding through this
++	 * function it is necessary to point the cfa at the signing register.
++	 */
++	cfi_def_cfa(x1, 0);
++#else
+ 	cfi_def_cfa(x1, 40);
++#endif
+ 	stp	x29, x30, [x1]
+ 	mov	x9, sp
+ 	str	x9, [x1, #32]
+
+From 6aa41bec9bf4b87bfbe70c34d4770bc9962298ca Mon Sep 17 00:00:00 2001
+From: Mike Hommey <mh@glandium.org>
+Date: Thu, 20 Aug 2020 11:00:01 +0900
+Subject: [PATCH 6/6] Fix variadic arguments on arm64 darwin ABI
+
+Normal arguments that spill on the stack are packed, but not variadic
+arguments. This is handled correctly for their placement already, but
+code generated on the callee side with va_list expects word-size
+sign-extension, so we need to fill the entire word.
+
+(cherry picked from commit e42520ca5be190c9be207355b8afc9e4401bfcdd)
+---
+ src/aarch64/ffi.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/src/aarch64/ffi.c b/src/aarch64/ffi.c
+index c4e6413c..22bd3448 100644
+--- a/src/aarch64/ffi.c
++++ b/src/aarch64/ffi.c
+@@ -647,12 +647,13 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *orig_rvalue,
+ 		state.ngrn = N_X_ARG_REG;
+ 		/* Note that the default abi extends each argument
+ 		   to a full 64-bit slot, while the iOS abi allocates
+-		   only enough space. */
++		   only enough space, except for variadic arguments. */
+ #ifdef __APPLE__
+-		memcpy(d, a, s);
+-#else
+-		*(ffi_arg *)d = ext;
++		if (!state.allocating_variadic)
++		  memcpy(d, a, s);
++		else
+ #endif
++		  *(ffi_arg *)d = ext;
+ 	      }
+ 	  }
+ 	  break;
